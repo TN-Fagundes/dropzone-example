@@ -15,9 +15,6 @@
 
 <body>
 
-    @isset($success)
-    @endisset
-
     <section style="padding-top:60px;">
         <div class="container">
             <div class="row">
@@ -33,10 +30,8 @@
                                 <h3 class="text-center">Upload Image By Click On Box</h3>
                                 <div class="dz-default dz-message"> <span>Drop files here to upload</span> </div>
                             </div>
-                            <button type="button" class="btn btn-success" id="ver-fila">Ver Fila</button>
-                            {{-- <button type="button" class="btn btn-primary" id="upload-button">Upload Files</button> --}}
-                            <button type="submit" class="btn btn-primary">Upload Files</button>
-                            <input type="text" name="teste">
+
+                            <button class="btn btn-primary" type="button" id="submit-button">Enviar</button>
                         </form>
                     </div>
                 </div>
@@ -51,55 +46,46 @@
         integrity="sha512-U2WE1ktpMTuRBPoCFDzomoIorbOyUv0sP8B+INA3EzNAhehbzED1rOJg6bCqPf/Tuposxb5ja/MAUnC8THSbLQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <script>
-        Dropzone.autoDiscover = false;
-        var myDropzone = new Dropzone("#image-upload", {
-            url: "{{ route('dropzone.store') }}",
-            autoProcessQueue: false, // Desativa o upload automático ao soltar os arquivos na área de upload
-            paramName: "file", // Nome do parâmetro para o arquivo enviado
-            maxFilesize: 100, // Tamanho máximo do arquivo em MB
-            acceptedFiles: ".jpeg,.jpg,.png", // Tipos de arquivos aceitos
-            addRemoveLinks: true, // Adiciona links para remover os arquivos adicionados
-
-            success: function(file, response) {
-                console.log(response.success);
-            }
-        });
-
-        // Manipulador de evento de clique do botão de upload
-        document.getElementById("image-upload").addEventListener("submit", function() {
-            var form = this;
-            var dropzone = Dropzone.forElement("#image-upload");
-
-            if (dropzone.getQueuedFiles().length > 0) {
-                event.preventDefault(); // Impede o envio do formulário
-
-                dropzone.on("queuecomplete", function() {
-                    form.submit(); // Envia o formulário após o envio dos arquivos
-                });
-
-                dropzone.processQueue(); // Inicia o envio dos arquivos
-            }
-        });
-
-        Dropzone.options.imageUpload = {
-            success: function(file, response) {
-                if (this.getQueuedFiles().length === 0 && this.getUploadingFiles().length === 0) {
-                    this.removeAllFiles(); // Remove todos os arquivos da fila
+        <script>
+            Dropzone.autoDiscover = false; // Desabilita o autoDiscover para evitar que o Dropzone seja anexado a todos os elementos com a classe 'dropzone'
+        
+            // Inicializa o Dropzone
+            var myDropzone = new Dropzone("#image-upload", {
+                url: "{{ route('dropzone.store') }}",
+                addRemoveLinks: true, // Habilita os links de remoção
+                maxFilesize: 5, // Define o tamanho máximo do arquivo em MB
+                acceptedFiles: 'image/*', // Permite apenas o upload de arquivos de imagem
+                autoProcessQueue: false, // Desabilita o processamento automático para permitir o gerenciamento manual dos arquivos
+                init: function() {
+                    var submitButton = document.querySelector('#submit-button');
+                    var myDropzone = this;
+        
+                    // Evento de clique no botão de envio
+                    submitButton.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        myDropzone.processQueue(); // Inicia o processamento manual dos arquivos na fila
+                    });
+        
+                    // Evento de sucesso do upload
+                    this.on('success', function(file) {
+                        // Este evento é acionado quando o arquivo foi enviado com sucesso para o servidor
+                        // Aqui você pode adicionar a lógica personalizada, se necessário, após o upload bem-sucedido do arquivo.
+                        console.log("Arquivo enviado com sucesso: " + file.name);
+                    });
+        
+                    // Evento de remoção de arquivo
+                    this.on('removedfile', function(file) {
+                        // Este evento é acionado sempre que um arquivo é removido da fila
+                        // Aqui você pode adicionar a lógica personalizada, como excluir o arquivo do servidor
+        
+                        // Para fins de demonstração, apenas registramos o nome do arquivo removido no console.
+                        console.log("Arquivo removido: " + file.name);
+                    });
                 }
-            }
-        };
-
-
-        document.getElementById("ver-fila").addEventListener("click", function() {
-            var myDropzone = Dropzone.forElement("#image-upload");
-            var queuedFiles = myDropzone.getQueuedFiles();
-
-            console.log(queuedFiles);
-        });
-    </script>
-
-
+            });
+        </script>
+             
 
 
 </body>

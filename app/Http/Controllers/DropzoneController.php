@@ -12,15 +12,14 @@ class DropzoneController extends Controller
         return view('dropzone');
     }
 
+      
     public function dropzoneStore(Request $request)    
     {        
         $image = $request->file('file');
-        if($image)
-        {
-            $imageName = time(). '.' . $image->extension();
-            $image->move(public_path('images'), $imageName);
-    
-            return response()->json(['success' => $imageName]);
-        }
+        
+        $imageName = time(). '.' . $image->extension();
+        $image->move(public_path('images'), $imageName);
+
+        return response()->json(['success' => $imageName]);
     }
 }
