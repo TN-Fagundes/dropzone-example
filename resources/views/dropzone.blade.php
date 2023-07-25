@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Dropzone File Upload</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
@@ -31,7 +32,7 @@
                                 <div class="dz-default dz-message"> <span>Drop files here to upload</span> </div>
                             </div>
 
-                            <button class="btn btn-primary" type="button" id="submit-button">Enviar</button>
+                            {{-- <button class="btn btn-primary" type="button" id="submit-button">Enviar</button> --}}
                         </form>
                     </div>
                 </div>
@@ -42,50 +43,62 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous">
     </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"
         integrity="sha512-U2WE1ktpMTuRBPoCFDzomoIorbOyUv0sP8B+INA3EzNAhehbzED1rOJg6bCqPf/Tuposxb5ja/MAUnC8THSbLQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-        <script>
-            Dropzone.autoDiscover = false; // Desabilita o autoDiscover para evitar que o Dropzone seja anexado a todos os elementos com a classe 'dropzone'
-        
-            // Inicializa o Dropzone
-            var myDropzone = new Dropzone("#image-upload", {
-                url: "{{ route('dropzone.store') }}",
-                addRemoveLinks: true, // Habilita os links de remoção
-                maxFilesize: 5, // Define o tamanho máximo do arquivo em MB
-                acceptedFiles: 'image/*', // Permite apenas o upload de arquivos de imagem
-                autoProcessQueue: false, // Desabilita o processamento automático para permitir o gerenciamento manual dos arquivos
-                init: function() {
-                    var submitButton = document.querySelector('#submit-button');
-                    var myDropzone = this;
-        
-                    // Evento de clique no botão de envio
-                    submitButton.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        myDropzone.processQueue(); // Inicia o processamento manual dos arquivos na fila
-                    });
-        
-                    // Evento de sucesso do upload
-                    this.on('success', function(file) {
-                        // Este evento é acionado quando o arquivo foi enviado com sucesso para o servidor
-                        // Aqui você pode adicionar a lógica personalizada, se necessário, após o upload bem-sucedido do arquivo.
-                        console.log("Arquivo enviado com sucesso: " + file.name);
-                    });
-        
-                    // Evento de remoção de arquivo
-                    this.on('removedfile', function(file) {
-                        // Este evento é acionado sempre que um arquivo é removido da fila
-                        // Aqui você pode adicionar a lógica personalizada, como excluir o arquivo do servidor
-        
-                        // Para fins de demonstração, apenas registramos o nome do arquivo removido no console.
-                        console.log("Arquivo removido: " + file.name);
+    <script>
+        Dropzone.options.imageUpload = {
+            maxFiles: null, // Define como null para permitir um número ilimitado de arquivos            
+            addRemoveLinks: true, // Habilita os links de remoção
+            dictDefaultMessage: 'Arraste e solte os arquivos aqui ou clique para fazer o upload',
+            dictInvalidFileType: 'Este tipo de arquivo não é permitido.',
+            init: function() {
+                var myDropzone = this;
+
+                // Configura a ação a ser executada após o envio dos arquivos
+                this.on('complete', function(file) {
+                    if (this.getUploadingFiles().length === 0 && this.getQueuedFiles().length === 0) {
+                        // Aqui você pode realizar alguma ação após o envio de todos os arquivos
+                    }
+                });
+
+                var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                // Defina o cabeçalho X-CSRF-TOKEN em todas as solicitações Ajax
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                // Função para excluir o arquivo usando Ajax
+                function deleteFile(fileName) {
+                    $.ajax({
+                        url: '/dropzone', // Substitua pela URL da sua rota para exclusão do arquivo
+                        type: 'DELETE',
+                        data: {
+                            file_name: fileName
+                        },
+                        success: function(response) {
+                            console.log(response);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error(xhr.responseText);
+                        }
                     });
                 }
-            });
-        </script>
-             
+
+                // Configura o evento de clique para cada link de remoção
+                this.on("removedfile", function(file) {
+                    // Remove o arquivo do "dropzone" quando o link de remoção é clicado
+                    deleteFile(file.name);
+                });
+            }
+        };
+    </script>
+
 
 
 </body>

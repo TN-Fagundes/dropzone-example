@@ -21,3 +21,5 @@ Route::get('/', function () {
 Route::get('/dropzone', [DropzoneController::class, 'dropzone']);
 
 Route::post('/dropzone', [DropzoneController::class, 'dropzoneStore'])->name('dropzone.store');
+
+Route::delete('/dropzone', [DropzoneController::class, 'dropzoneDestroy']);

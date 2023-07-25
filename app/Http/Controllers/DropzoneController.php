@@ -17,9 +17,23 @@ class DropzoneController extends Controller
     {        
         $image = $request->file('file');
         
-        $imageName = time(). '.' . $image->extension();
+        $imageName = $image->getClientOriginalName();
         $image->move(public_path('images'), $imageName);
 
         return response()->json(['success' => $imageName]);
+    }
+
+    public function dropzoneDestroy(Request $request)
+    {
+        $fileName = $request->input('file_name');
+        
+        $filePath = public_path('images') . '/' . $fileName;
+
+        if (file_exists($filePath)) {
+            unlink($filePath);
+            return response()->json(['success' => 'Arquivo excluído com sucesso']);
+        }
+
+        return response()->json(['error' => 'O arquivo não foi encontrado']);
     }
 }
